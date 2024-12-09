@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CognitoUser , AuthenticationDetails } from "amazon-cognito-identity-js";
+import UserPool from "../UserPool";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -8,11 +10,30 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (email === "user@example.com" && password === "password") {
-      navigate("/dashboard");
-    } else {
-      alert("Invalid credentials!");
-    }
+    const user = new CognitoUser({
+      Username : email ,
+      Pool : UserPool 
+    }) ; 
+
+    const authDetails = new AuthenticationDetails({
+      Username : email ,
+      Password : password 
+    })
+
+    user.authenticateUser(authDetails , {
+      onSuccess:(data)=>{
+        console.log("onSuccess : " , data)
+      }, 
+      onFailure : (err)=>{
+        console.err("onFailure : ", err )
+      } , 
+
+      newPasswordRequired :(data) =>{
+        console.log("newPasswordRequired : " ,data)
+      }
+    })
+
+  
   };
 
   return (
@@ -78,4 +99,3 @@ export default function Login() {
     </div>
   );
 }
-

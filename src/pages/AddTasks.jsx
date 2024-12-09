@@ -83,8 +83,8 @@ function AddTasks() {
   };
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="border border-black p-8 rounded-lg shadow-lg w-96">
+    <div className="flex items-center justify-center mt-14 mr-44 lg:mr-60 lg:mt-28 md:mt-40">
+      <div className="border border-black p-5 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Add Task</h2>
 
         {/* Task form */}

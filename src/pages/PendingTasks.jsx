@@ -2,26 +2,26 @@ import React, { useEffect, useState } from "react";
 import { useTasks } from "../context/TaskContext"; // Import the useTasks hook
 import { useNavigate } from "react-router-dom";
 
-function InProcessTasks() {
+function PendingTasks() {
   const { tasks, updateTaskStatus, removeTask, updateTaskDetails } = useTasks(); // Access tasks, updateTaskStatus, and updateTaskDetails from context
-  const [processedTasks, setProcessedTasks] = useState([]);
+  const [pendingTasks, setPendingTasks] = useState([]);
   const [message, setMessage] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null); // Track the task being edited
   const [updatedTask, setUpdatedTask] = useState(null); // Store the updated task data
   const navigate = useNavigate();
 
-  // Filter tasks with status "In Progress" when tasks change
   useEffect(() => {
-    const inProgressTasks = tasks.filter((task) => task.status === "In Progress");
-    setProcessedTasks(inProgressTasks);
-  }, [tasks]); // Re-run when the tasks change
+    // Filter to show only "Pending" tasks from the context
+    const filteredTasks = tasks.filter((task) => task.status === "Pending");
+    setPendingTasks(filteredTasks);
+  }, [tasks]);
 
-  const handleTaskCompletion = (taskId) => {
-    // Update task status to "Completed" using the context's updateTaskStatus function
-    updateTaskStatus(taskId, "Completed");
+  const handleTaskProcessed = (taskId) => {
+    // Update task status to "In Progress" using the context's updateTaskStatus function
+    updateTaskStatus(taskId, "In Progress");
 
-    // Set the success message
-    setMessage("Task marked as completed!");
+    // Set a success message
+    setMessage("Task marked as In Progress!");
 
     // Clear the success message after 3 seconds
     setTimeout(() => {
@@ -42,7 +42,7 @@ function InProcessTasks() {
   const handleEditTask = (taskId) => {
     // Set the task as editable
     setEditingTaskId(taskId);
-    const taskToEdit = processedTasks.find((task) => task.id === taskId);
+    const taskToEdit = pendingTasks.find((task) => task.id === taskId);
     setUpdatedTask({ ...taskToEdit });
   };
 
@@ -68,23 +68,23 @@ function InProcessTasks() {
 
   return (
     <div className="p-6 mt-14">
-      <h1 className="text-2xl font-bold mb-6">In Process Tasks</h1>
+      <h1 className="text-2xl font-bold mb-6">Pending Tasks</h1>
 
-      {/* Display success message when a task is marked as completed or edited */}
+      {/* Display success message when a task is marked as in progress or edited */}
       {message && (
         <div className="mb-4 text-green-600 font-semibold">{message}</div>
       )}
 
-      {processedTasks.length === 0 ? (
-        <p className="text-gray-500">No In-Progress tasks to display.</p>
+      {pendingTasks.length === 0 ? (
+        <p className="text-gray-500">No Pending tasks to display.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {processedTasks.map((task) => (
+          {pendingTasks.map((task) => (
             <div
               key={task.id}
-              className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700"
+              className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between"
             >
-              {/* Editable Task Title */}
+              {/* Task Title */}
               {editingTaskId === task.id ? (
                 <input
                   type="text"
@@ -99,7 +99,7 @@ function InProcessTasks() {
                 </h5>
               )}
 
-              {/* Editable Task Description */}
+              {/* Task Description */}
               {editingTaskId === task.id ? (
                 <textarea
                   name="description"
@@ -161,13 +161,13 @@ function InProcessTasks() {
                 </p>
               )}
 
-              <div className="mt-4 flex gap-2">
-                {/* Mark as Completed Button */}
+              <div className="mt-4 flex gap-2 justify-between">
+                {/* Mark as In Progress Button */}
                 <button
-                  onClick={() => handleTaskCompletion(task.id)}
-                  className="px-3 py-1 text-xs font-semibold rounded-full text-green-700 bg-green-100 hover:bg-green-200 cursor-pointer"
+                  onClick={() => handleTaskProcessed(task.id)}
+                  className="px-3 py-1 text-xs font-semibold rounded-full text-yellow-700 bg-yellow-100 hover:bg-yellow-200 cursor-pointer"
                 >
-                  Mark as Completed
+                  Mark as In Progress
                 </button>
 
                 {/* Edit Button */}
@@ -203,4 +203,4 @@ function InProcessTasks() {
   );
 }
 
-export default InProcessTasks;
+export default PendingTasks;

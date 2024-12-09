@@ -7,19 +7,19 @@ import CompletedTasks from './pages/CompletedTasks';
 import AddTasks from './pages/AddTasks';
 import InProcessTasks from './pages/InProcessTasks';
 
-
-
 function App() {
   return (
     <Router>
       <Routes>
         {/* Authentication Routes */}
+        <Route path="/" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-
+        
+        {/* Verification Route */}
+        
         {/* Main Application Routes with Layout */}
         <Route path="/dashboard" element={<Layout />}>
-          <Route path='addtasks' index element={<AddTasks />} />
+          <Route path="addtasks" index element={<AddTasks />} />
           <Route path="completed" element={<CompletedTasks />} />
           <Route path="inprocess" element={<InProcessTasks />} />
         </Route>
