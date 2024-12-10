@@ -4,8 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Layout from './components/Layout';
 import CompletedTasks from './pages/CompletedTasks';
-import AddTasks from './pages/Home';
-import InProcessTasks from './pages/InProcessTasks';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -19,9 +18,8 @@ function App() {
         
         {/* Main Application Routes with Layout */}
         <Route path="/home" element={<Layout />}>
-          <Route path="addtasks" index element={<AddTasks />} />
+          <Route path="pending" element={<Home />} />
           <Route path="completed" element={<CompletedTasks />} />
-          <Route path="inprocess" element={<InProcessTasks />} />
         </Route>
       </Routes>
     </Router>

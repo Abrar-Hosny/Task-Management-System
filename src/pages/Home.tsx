@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { TaskFormModal } from "../components/task-form-modal"
-import { TaskCard } from "../components/task-card"
+import { useState, useEffect } from "react";
+import { TaskFormModal } from "../components/task-form-modal";
+import { TaskCard } from "../components/task-card";
 
 export default function Home() {
-  const [tasks, setTasks] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([]);
 
   useEffect(() => {
-    const storedTasks = localStorage.getItem("tasks")
+    const storedTasks = localStorage.getItem("tasks");
     if (storedTasks) {
-      setTasks(JSON.parse(storedTasks))
+      setTasks(JSON.parse(storedTasks));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks))
-  }, [tasks])
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTask = (newTask: any) => {
-    setTasks([...tasks, { ...newTask, id: Date.now().toString() }])
-  }
+    setTasks([...tasks, { ...newTask, id: Date.now().toString() }]);
+  };
 
   const completeTask = (id: string) => {
     setTasks(
       tasks.map((task) =>
         task.id === id ? { ...task, status: "completed" } : task
       )
-    )
-  }
+    );
+  };
 
-  const pendingTasks = tasks.filter((task) => task.status === "pending")
+  const pendingTasks = tasks.filter((task) => task.status === "pending");
 
   return (
     <div>
@@ -42,6 +42,5 @@ export default function Home() {
         ))}
       </div>
     </div>
-  )
+  );
 }
-

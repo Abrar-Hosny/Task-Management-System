@@ -26,7 +26,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={location.pathname === "/"}>
               <NavLink
-                to="/"
+                to="/home/pending"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
                 <ListTodo className="mr-2 h-4 w-4" />
@@ -40,7 +40,7 @@ export function AppSidebar() {
               isActive={location.pathname === "/completed"}
             >
               <NavLink
-                to="/completed"
+                to="/home/completed"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
                 <CheckSquare className="mr-2 h-4 w-4" />
