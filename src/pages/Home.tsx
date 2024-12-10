@@ -1,33 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useTasks } from "../context/TaskContext";
 import { TaskFormModal } from "../components/task-form-modal";
 import { TaskCard } from "../components/task-card";
 
 export default function Home() {
-  const [tasks, setTasks] = useState<any[]>([]);
+  const { tasks, addTask, updateTaskStatus } = useTasks();
 
+  // Sync tasks with localStorage when they change
   useEffect(() => {
     const storedTasks = localStorage.getItem("tasks");
     if (storedTasks) {
-      setTasks(JSON.parse(storedTasks));
+      const parsedTasks = JSON.parse(storedTasks);
+      parsedTasks.forEach((task) => {
+        if (!tasks.some((t) => t.id === task.id)) {
+          addTask(task);
+        }
+      });
     }
-  }, []);
+  }, [tasks, addTask]);
 
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (newTask: any) => {
-    setTasks([...tasks, { ...newTask, id: Date.now().toString() }]);
-  };
-
-  const completeTask = (id: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, status: "completed" } : task
-      )
-    );
+  const completeTask = (id) => {
+    updateTaskStatus(id, "completed");
   };
 
   const pendingTasks = tasks.filter((task) => task.status === "pending");

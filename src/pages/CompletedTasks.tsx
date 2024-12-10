@@ -1,18 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useTasks } from "../context/TaskContext"
 import { TaskCard } from "../components/task-card"
 
 export default function CompletedTasks() {
-  const [tasks, setTasks] = useState<any[]>([])
+  const { tasks } = useTasks() // Get tasks from context
 
-  useEffect(() => {
-    const storedTasks = localStorage.getItem("tasks")
-    if (storedTasks) {
-      setTasks(JSON.parse(storedTasks))
-    }
-  }, [])
-
+  // Filter completed tasks
   const completedTasks = tasks.filter((task) => task.status === "completed")
 
   return (
@@ -26,4 +21,3 @@ export default function CompletedTasks() {
     </div>
   )
 }
-
