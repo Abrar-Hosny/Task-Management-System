@@ -18,7 +18,7 @@ function App() {
         {/* Verification Route */}
         
         {/* Main Application Routes with Layout */}
-        <Route path="/dashboard" element={<Layout />}>
+        <Route path="/home" element={<Layout />}>
           <Route path="addtasks" index element={<AddTasks />} />
           <Route path="completed" element={<CompletedTasks />} />
           <Route path="inprocess" element={<InProcessTasks />} />

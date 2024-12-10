@@ -1,29 +1,51 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
-export function TaskFormModal({ onAddTask }: { onAddTask: (task: any) => void }) {
-  const [isOpen, setIsOpen] = useState(false)
+export function TaskFormModal({
+  onAddTask,
+}: {
+  onAddTask: (task: any) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
   const [task, setTask] = useState({
     title: "",
     description: "",
     startDate: "",
     endDate: "",
     status: "pending",
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onAddTask(task)
-    setIsOpen(false)
-    setTask({ title: "", description: "", startDate: "", endDate: "", status: "pending" })
-  }
+    e.preventDefault();
+    onAddTask(task);
+    setIsOpen(false);
+    setTask({
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      status: "pending",
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -49,7 +71,9 @@ export function TaskFormModal({ onAddTask }: { onAddTask: (task: any) => void })
             <Textarea
               id="description"
               value={task.description}
-              onChange={(e) => setTask({ ...task, description: e.target.value })}
+              onChange={(e) =>
+                setTask({ ...task, description: e.target.value })
+              }
               required
             />
           </div>
@@ -92,6 +116,5 @@ export function TaskFormModal({ onAddTask }: { onAddTask: (task: any) => void })
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
