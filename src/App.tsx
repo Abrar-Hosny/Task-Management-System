@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Layout from './components/Layout';
 import CompletedTasks from './pages/CompletedTasks';
-import AddTasks from './pages/AddTasks';
+import AddTasks from './pages/Home';
 import InProcessTasks from './pages/InProcessTasks';
 
 function App() {
