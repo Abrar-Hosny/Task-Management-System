@@ -3,6 +3,8 @@ import AWS from "aws-sdk";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { useNavigate } from "react-router-dom"; // For navigation
+
 import {
   Card,
   CardContent,
@@ -94,7 +96,10 @@ export default function Login() {
         } catch (error) {
           console.warn("SNS notification failed, but login is successful.");
         }
-        router.push("/home/pending");
+        setTimeout(() => {
+          // Replace navigation logic with window.location.href
+          window.location.href = "/home/pending"; // Redirect to home/pending
+        }, 1000); // Redirect after 3 seconds
 
       },
       onFailure: (err) => {
