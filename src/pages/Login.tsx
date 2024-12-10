@@ -1,37 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import AWS from "aws-sdk";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
-import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
-import UserPool from '../UserPool'; // Ensure UserPool is properly set up and exported
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
+import UserPool from "../UserPool";
+
+// Load AWS Configuration
+AWS.config.update({
+  region: process.env.REACT_APP_AWS_REGION, // Use environment variables
+  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY,
+  secretAccessKey: process.env.REACT_APP_AWS_SECRET_KEY,
+});
+
+const sns = new AWS.SNS();
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({ email: '', password: '' });
-  const [loginStatus, setLoginStatus] = useState('');
-  const [statusColor, setStatusColor] = useState('text-red-500'); // Default red for errors
+  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [loginStatus, setLoginStatus] = useState("");
+  const [statusColor, setStatusColor] = useState("text-red-500");
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: "", password: "" };
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
       isValid = false;
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
       isValid = false;
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
       isValid = false;
     }
 
@@ -39,7 +56,21 @@ export default function Login() {
     return isValid;
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const sendSNSNotification = async (username) => {
+    const params = {
+      Message: `User ${username} logged in successfully.`,
+      TopicArn: process.env.REACT_APP_SNS_TOPIC_ARN, // Use environment variable
+    };
+
+    try {
+      await sns.publish(params).promise();
+      console.log("Notification sent successfully.");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  };
+
+  const handleLogin = (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -54,27 +85,34 @@ export default function Login() {
     });
 
     user.authenticateUser(authDetails, {
-      onSuccess: (data) => {
-        console.log('onSuccess:', data);
-        setLoginStatus('Login successful!');
-        setStatusColor('text-green-500'); // Set green color for success
+      onSuccess: async (data) => {
+        console.log("onSuccess:", data);
+        setLoginStatus("Login successful!");
+        setStatusColor("text-green-500");
+        try {
+          await sendSNSNotification(email); // Send SNS notification on successful login
+        } catch (error) {
+          console.warn("SNS notification failed, but login is successful.");
+        }
+        router.push("/home/pending");
+
       },
       onFailure: (err) => {
-        console.error('onFailure:', err);
-        setLoginStatus('Login failed. Please check your credentials.');
-        setStatusColor('text-red-500'); // Set red color for failure
+        console.error("onFailure:", err);
+        setLoginStatus("Login failed. Please check your credentials.");
+        setStatusColor("text-red-500");
       },
       newPasswordRequired: (data) => {
-        console.log('newPasswordRequired:', data);
-        setLoginStatus('Password update required.');
-        setStatusColor('text-yellow-500'); // Set yellow color for password update
+        console.log("newPasswordRequired:", data);
+        setLoginStatus("Password update required.");
+        setStatusColor("text-yellow-500");
       },
     });
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm"> {/* Adjusted width */}
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
           <CardDescription className="text-center">
@@ -91,20 +129,22 @@ export default function Login() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? 'border-red-500' : ''}
+                className={errors.email ? "border-red-500" : ""}
               />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? 'border-red-500' : ''}
+                  className={errors.password ? "border-red-500" : ""}
                 />
                 <button
                   type="button"
@@ -118,7 +158,9 @@ export default function Login() {
                   )}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
             </div>
             <Button type="submit" className="w-full">
               Log in
@@ -126,7 +168,9 @@ export default function Login() {
           </form>
         </CardContent>
         {loginStatus && (
-          <p className={`text-center font-semibold mt-2 mb-4 text-sm ${statusColor}`}>
+          <p
+            className={`text-center font-semibold mt-2 mb-4 text-sm ${statusColor}`}
+          >
             {loginStatus}
           </p>
         )}
