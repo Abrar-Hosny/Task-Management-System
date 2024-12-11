@@ -1,22 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTasks } from "../context/TaskContext";
 import { TaskFormModal } from "../components/task-form-modal";
 import { TaskCard } from "../components/task-card";
 import { motion } from "framer-motion";
 import { Loader2, PlusCircle } from "lucide-react";
-import { Button } from "../components/ui/button";
 
 export default function Home() {
-  const { tasks, addTask, updateTaskStatus, isLoading } = useTasks();
+  const { tasks, addTask, updateTaskStatus, fetchTasks, isLoading } =
+    useTasks();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const completeTask = (id) => {
-    updateTaskStatus(id, "completed");
-  };
+  // Fetch pending tasks when component mounts
+  useEffect(() => {
+    fetchTasks("PENDING");
+  }, []);
 
-  const pendingTasks = tasks.filter((task) => task.status === "pending");
+  const completeTask = (id: string) => {
+    updateTaskStatus(id, "COMPLETED");
+  };
 
   return (
     <div className="w-full h-full">
@@ -39,14 +42,14 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {pendingTasks.map((task, index) => (
+            {tasks.map((task, index) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <TaskCard task={task} onComplete={completeTask} />
+                <TaskCard task={task} />
               </motion.div>
             ))}
           </motion.div>
