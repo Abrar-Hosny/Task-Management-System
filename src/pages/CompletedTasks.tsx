@@ -3,17 +3,39 @@
 import { useTasks } from "../context/TaskContext";
 import { TaskCard } from "../components/task-card";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 export default function CompletedTasks() {
-  const { tasks } = useTasks(); // Get tasks from context
+  const { completedTasks, fetchTasks, isLoading } = useTasks();
 
-  // Filter completed tasks
-  const completedTasks = tasks.filter((task) => task.status === "completed");
+  // Fetch completed tasks when the component mounts
+  useEffect(() => {
+    fetchTasks("COMPLETED");
+  }, [fetchTasks]);
+
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <p>Loading completed tasks...</p>
+      </div>
+    );
+  }
+
+  // Render when no completed tasks
+  if (completedTasks.length === 0) {
+    return (
+      <div className="p-4 text-center">
+        <p>No completed tasks found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
       {/* Page Header */}
       <div className="flex items-center justify-between w-full mb-6">
+        <h1 className="text-2xl font-bold">Completed Tasks</h1>
       </div>
 
       {/* Tasks Grid */}
