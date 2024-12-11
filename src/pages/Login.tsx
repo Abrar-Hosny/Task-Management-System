@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { useNavigate } from "react-router-dom"; // For navigation
+import { useNavigate } from "react-router-dom";
 
 import {
   Card,
@@ -15,14 +15,20 @@ import {
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
 import UserPool from "../UserPool";
+import AWS from "aws-sdk";
 
-// Import the AWS config
-import AWS from "../../awsConfig";
+// Configure AWS credentials using environment variables
+AWS.config.update({
+  accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+  secretAccessKey:  import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+  region: "us-east-1",
+});
 
 // Load SNS service from AWS SDK
 const sns = new AWS.SNS();
-
+console.log(import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ,  import.meta.env.VITE_AWS_ACCESS_KEY_ID , import.meta.env.VITE_SNS_TOPIC_ARN )
 export default function Login() {
+  const navigate = useNavigate(); // For navigation after login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -54,17 +60,60 @@ export default function Login() {
     return isValid;
   };
 
-  const sendSNSNotification = async (username) => {
+  const getClientIpAddress = async () => {
+    try {
+      const response = await fetch("https://api.ipify.org?format=json");
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error("Failed to get IP address:", error);
+      return "Unknown";
+    }
+  };
+
+  const sendDetailedSNSNotification = async (username, loginTimestamp) => {
+    const ipAddress = await getClientIpAddress();
+
+    const notificationMessage = JSON.stringify({
+      username: username,
+      loginTimestamp: loginTimestamp,
+      loginSource: "Web Application",
+      ipAddress: ipAddress,
+      deviceInfo: navigator.userAgent,
+    });
+
     const params = {
-      Message: `User ${username} logged in successfully.`,
-      TopicArn: "arn:aws:sns:us-east-1:430118853958:Successful-Login", // Use environment variable for SNS Topic ARN
+      Message: notificationMessage,
+      TopicArn: import.meta.env.VITE_SNS_TOPIC_ARN ,
+      MessageAttributes: {
+        EventType: {
+          DataType: "String",
+          StringValue: "UserLogin",
+        },
+      },
     };
 
     try {
       await sns.publish(params).promise();
-      console.log("Notification sent successfully.");
+      console.log("Detailed login notification sent successfully.");
     } catch (error) {
-      console.error("Error sending notification:", error); // Log error details for debugging
+      console.error("Error sending detailed login notification:", error);
+    }
+  };
+
+  // Subscribe email to SNS topic
+  const subscribeEmailToSNS = async (email) => {
+    const params = {
+      Protocol: "EMAIL",
+      TopicArn:import.meta.env.VITE_SNS_TOPIC_ARN, // Your SNS topic ARN
+      Endpoint: email, // Email to subscribe
+    };
+
+    try {
+      const data = await sns.subscribe(params).promise();
+      console.log("Email subscription successful:", data);
+    } catch (error) {
+      console.error("Error subscribing email to SNS:", error);
     }
   };
 
@@ -85,18 +134,37 @@ export default function Login() {
     user.authenticateUser(authDetails, {
       onSuccess: async (data) => {
         console.log("onSuccess:", data);
-        setLoginStatus("Login successful!");
+        setLoginStatus("Login successful! Please check your email");
         setStatusColor("text-green-500");
 
         const username = data.getIdToken().payload.email || email;
+        const loginTimestamp = new Date().toISOString();
 
         try {
-          await sendSNSNotification(username); // Send SNS notification on successful login
-        } catch (error) {
-          console.warn("SNS notification failed, but login is successful.");
-        }
+          // Send detailed SNS notification about the login event
+          await sendDetailedSNSNotification(username, loginTimestamp);
 
-      
+          // Subscribe email to SNS topic
+          await subscribeEmailToSNS(email); // Subscribe the email on login
+
+          // Update status to inform the user about the subscription process
+          setLoginStatus(
+            "Login successful! Please check your email to confirm your subscription."
+          );
+          setStatusColor("text-blue-500");
+
+          // Optional: Navigate to a dashboard or home page after successful login
+          navigate("/home/pending");
+        } catch (error) {
+          console.warn(
+            "Detailed SNS notification failed, but login is successful."
+          );
+          // Update status to inform the user about potential issues with SNS
+          setLoginStatus(
+            "Login successful, but failed to send notification. Please check email subscription."
+          );
+          setStatusColor("text-yellow-500");
+        }
       },
       onFailure: (err) => {
         console.error("onFailure:", err);
@@ -178,7 +246,7 @@ export default function Login() {
         <CardFooter className="flex justify-center">
           <p className="text-sm">
             Don't have an account?{" "}
-            <a href="/" className="text-blue-600 hover:underline">
+            <a href="/signup" className="text-blue-600 hover:underline">
               Sign up
             </a>
           </p>
