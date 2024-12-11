@@ -17,9 +17,8 @@ export default function Home() {
     fetchTasks("PENDING");
   }, []);
 
-  const completeTask = (id: string) => {
-    updateTaskStatus(id, "COMPLETED");
-  };
+  // Filter out completed tasks
+  const pendingTasks = tasks.filter((task) => task.status !== "COMPLETED");
 
   return (
     <div className="w-full h-full">
@@ -42,7 +41,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {tasks.map((task, index) => (
+            {pendingTasks.map((task, index) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, y: 20 }}
