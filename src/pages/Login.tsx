@@ -17,16 +17,16 @@ import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
 import UserPool from "../UserPool";
 import AWS from "aws-sdk";
 
-// Configure AWS credentials with direct values
+// Configure AWS credentials using environment variables
 AWS.config.update({
-  accessKeyId: "AKIAWIJIU3VDBH4ZP5WL",
-  secretAccessKey: "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",
+  accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+  secretAccessKey:  import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
   region: "us-east-1",
 });
 
 // Load SNS service from AWS SDK
 const sns = new AWS.SNS();
-
+console.log(import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ,  import.meta.env.VITE_AWS_ACCESS_KEY_ID , import.meta.env.VITE_SNS_TOPIC_ARN )
 export default function Login() {
   const navigate = useNavigate(); // For navigation after login
   const [email, setEmail] = useState("");
@@ -84,7 +84,7 @@ export default function Login() {
 
     const params = {
       Message: notificationMessage,
-      TopicArn: "arn:aws:sns:us-east-1:430118853958:Successful-Login",
+      TopicArn: import.meta.env.VITE_SNS_TOPIC_ARN ,
       MessageAttributes: {
         EventType: {
           DataType: "String",
@@ -105,7 +105,7 @@ export default function Login() {
   const subscribeEmailToSNS = async (email) => {
     const params = {
       Protocol: "EMAIL",
-      TopicArn: "arn:aws:sns:us-east-1:430118853958:Successful-Login", // Your SNS topic ARN
+      TopicArn:import.meta.env.VITE_SNS_TOPIC_ARN, // Your SNS topic ARN
       Endpoint: email, // Email to subscribe
     };
 
@@ -120,37 +120,39 @@ export default function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
+
     const user = new CognitoUser({
       Username: email,
       Pool: UserPool,
     });
-  
+
     const authDetails = new AuthenticationDetails({
       Username: email,
       Password: password,
     });
-  
+
     user.authenticateUser(authDetails, {
       onSuccess: async (data) => {
         console.log("onSuccess:", data);
         setLoginStatus("Login successful! Please check your email");
         setStatusColor("text-green-500");
-  
+
         const username = data.getIdToken().payload.email || email;
         const loginTimestamp = new Date().toISOString();
-  
+
         try {
           // Send detailed SNS notification about the login event
           await sendDetailedSNSNotification(username, loginTimestamp);
-  
+
           // Subscribe email to SNS topic
           await subscribeEmailToSNS(email); // Subscribe the email on login
-  
+
           // Update status to inform the user about the subscription process
-          setLoginStatus("Login successful! Please check your email to confirm your subscription.");
+          setLoginStatus(
+            "Login successful! Please check your email to confirm your subscription."
+          );
           setStatusColor("text-blue-500");
-  
+
           // Optional: Navigate to a dashboard or home page after successful login
           navigate("/home/pending");
         } catch (error) {
@@ -158,7 +160,9 @@ export default function Login() {
             "Detailed SNS notification failed, but login is successful."
           );
           // Update status to inform the user about potential issues with SNS
-          setLoginStatus("Login successful, but failed to send notification. Please check email subscription.");
+          setLoginStatus(
+            "Login successful, but failed to send notification. Please check email subscription."
+          );
           setStatusColor("text-yellow-500");
         }
       },
@@ -174,7 +178,6 @@ export default function Login() {
       },
     });
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100">
