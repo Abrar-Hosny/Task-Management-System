@@ -2,12 +2,14 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { TaskProvider } from "./context/TaskContext.js"; // Import the TaskProvider
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <TaskProvider>
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
       <App />
-    </TaskProvider>
-  </StrictMode>
-);
+    </StrictMode>
+  );
+} else {
+  console.error("Failed to find the root element");
+}
