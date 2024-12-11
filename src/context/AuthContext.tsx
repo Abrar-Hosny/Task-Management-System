@@ -55,11 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
               // Log session details for debugging
               console.log("Session is valid");
-              console.log(
-                "Access Token:",
-                session.getAccessToken().getJwtToken()
-              );
-              console.log("ID Token:", session.getIdToken().getJwtToken());
             } else {
               setIsAuthenticated(false);
               setUser(null);
@@ -96,8 +91,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
           // Log session details for debugging
           console.log("Login successful");
-          console.log("Access Token:", session.getAccessToken().getJwtToken());
-          console.log("ID Token:", session.getIdToken().getJwtToken());
+          // console.log("Access Token:", session.getAccessToken().getJwtToken());
+          // console.log("ID Token:", session.getIdToken().getJwtToken());
 
           resolve(session);
         },

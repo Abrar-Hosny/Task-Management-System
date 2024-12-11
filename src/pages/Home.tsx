@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Loader2, PlusCircle } from "lucide-react";
 
 export default function Home() {
-  const { tasks, addTask, updateTaskStatus, fetchTasks, isLoading } =
+  const { tasks, addTask, fetchTasks, isLoading } =
     useTasks();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

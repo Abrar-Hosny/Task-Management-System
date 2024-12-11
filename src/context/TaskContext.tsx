@@ -71,7 +71,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       try {
         // Safely get userId
         const userId = authContext.getUserId?.();
-        console.log(`Fetching ${status} tasks for userId:`, userId);
+        // console.log(`Fetching ${status} tasks for userId:`, userId);
 
         if (!userId) {
           throw new Error("Unable to retrieve user ID");

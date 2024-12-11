@@ -26,7 +26,6 @@ AWS.config.update({
 
 // Load SNS service from AWS SDK
 const sns = new AWS.SNS();
-console.log(import.meta.env.VITE_AWS_SECRET_ACCESS_KEY ,  import.meta.env.VITE_AWS_ACCESS_KEY_ID , import.meta.env.VITE_SNS_TOPIC_ARN )
 export default function Login() {
   const navigate = useNavigate(); // For navigation after login
   const [email, setEmail] = useState("");
@@ -133,7 +132,7 @@ export default function Login() {
 
     user.authenticateUser(authDetails, {
       onSuccess: async (data) => {
-        console.log("onSuccess:", data);
+        // console.log("onSuccess:", data);
         setLoginStatus("Login successful! Please check your email");
         setStatusColor("text-green-500");
 

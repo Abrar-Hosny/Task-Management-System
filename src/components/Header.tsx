@@ -13,7 +13,6 @@ import { useAuth } from "../context/AuthContext";
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
-  console.log(user);
   return (
     <header className="flex items-center justify-end w-full p-4 border-b">
       <DropdownMenu>
