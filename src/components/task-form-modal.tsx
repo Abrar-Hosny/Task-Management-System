@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { X } from "lucide-react";
+import { SpeechToTextInput } from "../components/Speech-To-Text-Input";
 
 export function TaskFormModal({ isOpen, onClose, onAddTask }) {
   const [title, setTitle] = useState("");
@@ -46,7 +47,7 @@ export function TaskFormModal({ isOpen, onClose, onAddTask }) {
               </Button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+              <div className="flex items-center space-x-2">
                 <Input
                   type="text"
                   placeholder="Task Title"
@@ -54,13 +55,23 @@ export function TaskFormModal({ isOpen, onClose, onAddTask }) {
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full"
                 />
+                <SpeechToTextInput
+                  inputType="title"
+                  value={title}
+                  onValueChange={setTitle}
+                />
               </div>
-              <div>
+              <div className="flex items-center space-x-2">
                 <Textarea
                   placeholder="Task Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full h-32"
+                />
+                <SpeechToTextInput
+                  inputType="description"
+                  value={description}
+                  onValueChange={setDescription}
                 />
               </div>
               <Button type="submit" className="w-full">
