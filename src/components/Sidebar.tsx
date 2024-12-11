@@ -18,10 +18,10 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="flex p-4">
         <h2 className="text-lg font-semibold">Task Manager</h2>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex p-4 border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={location.pathname === "/"}>
@@ -29,7 +29,7 @@ export function AppSidebar() {
                 to="/home/pending"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
-                <ListTodo className="mr-2 h-4 w-4" />
+                <ListTodo className="w-4 h-4 mr-2" />
                 Pending Tasks
               </NavLink>
             </SidebarMenuButton>
@@ -43,7 +43,7 @@ export function AppSidebar() {
                 to="/home/completed"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
-                <CheckSquare className="mr-2 h-4 w-4" />
+                <CheckSquare className="w-4 h-4 mr-2" />
                 Completed Tasks
               </NavLink>
             </SidebarMenuButton>
