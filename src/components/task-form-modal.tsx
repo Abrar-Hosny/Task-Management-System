@@ -1,120 +1,75 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { Label } from "../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+import { X } from "lucide-react";
 
-export function TaskFormModal({
-  onAddTask,
-}: {
-  onAddTask: (task: any) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [task, setTask] = useState({
-    title: "",
-    description: "",
-    startDate: "",
-    endDate: "",
-    status: "pending",
-  });
+export function TaskFormModal({ isOpen, onClose, onAddTask }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onAddTask(task);
-    setIsOpen(false);
-    setTask({
-      title: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      status: "pending",
-    });
+    if (title.trim() && description.trim()) {
+      onAddTask({ title, description, status: "pending" });
+      setTitle("");
+      setDescription("");
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Task</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Task Title</Label>
-            <Input
-              id="title"
-              value={task.title}
-              onChange={(e) => setTask({ ...task, title: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Task Description</Label>
-            <Textarea
-              id="description"
-              value={task.description}
-              onChange={(e) =>
-                setTask({ ...task, description: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={task.startDate}
-              onChange={(e) => setTask({ ...task, startDate: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="endDate">End Date</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={task.endDate}
-              onChange={(e) => setTask({ ...task, endDate: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={task.status}
-              onValueChange={(value) => setTask({ ...task, status: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit">Add Task</Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex justify-end bg-black bg-opacity-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="w-full h-full max-w-md p-6 bg-white shadow-lg dark:bg-gray-800"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+                Add New Task
+              </h2>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Task Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <Textarea
+                  placeholder="Task Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full h-32"
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Add Task
+              </Button>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

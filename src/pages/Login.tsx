@@ -112,7 +112,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
@@ -133,7 +133,7 @@ export default function Login() {
                 className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email}</p>
+                <p className="text-sm text-red-500">{errors.email}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -150,17 +150,17 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
+                    <EyeOffIcon className="w-5 h-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5" />
+                    <EyeIcon className="w-5 h-5" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-500 text-sm">{errors.password}</p>
+                <p className="text-sm text-red-500">{errors.password}</p>
               )}
             </div>
             <Button type="submit" className="w-full">
