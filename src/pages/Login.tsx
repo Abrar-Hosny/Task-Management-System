@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import AWS from "aws-sdk";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -17,13 +16,10 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
 import UserPool from "../UserPool";
 
-// Load AWS Configuration
-AWS.config.update({
-  region: process.env.REACT_APP_AWS_REGION, // Use environment variables
-  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY,
-  secretAccessKey: process.env.REACT_APP_AWS_SECRET_KEY,
-});
+// Import the AWS config
+import AWS from "../../awsConfig";
 
+// Load SNS service from AWS SDK
 const sns = new AWS.SNS();
 
 export default function Login() {
@@ -61,14 +57,14 @@ export default function Login() {
   const sendSNSNotification = async (username) => {
     const params = {
       Message: `User ${username} logged in successfully.`,
-      TopicArn: process.env.REACT_APP_SNS_TOPIC_ARN, // Use environment variable
+      TopicArn: "arn:aws:sns:us-east-1:430118853958:Successful-Login", // Use environment variable for SNS Topic ARN
     };
 
     try {
       await sns.publish(params).promise();
       console.log("Notification sent successfully.");
     } catch (error) {
-      console.error("Error sending notification:", error);
+      console.error("Error sending notification:", error); // Log error details for debugging
     }
   };
 
@@ -91,16 +87,16 @@ export default function Login() {
         console.log("onSuccess:", data);
         setLoginStatus("Login successful!");
         setStatusColor("text-green-500");
+
+        const username = data.getIdToken().payload.email || email;
+
         try {
-          await sendSNSNotification(email); // Send SNS notification on successful login
+          await sendSNSNotification(username); // Send SNS notification on successful login
         } catch (error) {
           console.warn("SNS notification failed, but login is successful.");
         }
-        setTimeout(() => {
-          // Replace navigation logic with window.location.href
-          window.location.href = "/home/pending"; // Redirect to home/pending
-        }, 1000); // Redirect after 3 seconds
 
+      
       },
       onFailure: (err) => {
         console.error("onFailure:", err);
