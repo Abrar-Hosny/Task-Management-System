@@ -4,6 +4,7 @@ import { useTasks } from "../context/TaskContext";
 import { TaskCard } from "../components/task-card";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function CompletedTasks() {
   const { completedTasks, fetchTasks, isLoading } = useTasks();
@@ -16,8 +17,8 @@ export default function CompletedTasks() {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <p>Loading completed tasks...</p>
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
       </div>
     );
   }

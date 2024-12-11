@@ -26,13 +26,13 @@ export default function Home() {
       <main className="w-full h-full p-4 space-y-8">
         <div className="fixed bottom-0 transform -translate-x-1/2 left-[50%] md:left-[60%] z-50 bg-white">
           <PlusCircle
-            className="flex items-center justify-center w-20 h-20 transition-all rounded-full text-primary hover:scale-110 hover:bg-primary hover:text-primary-foreground"
+            className="flex items-center justify-center w-16 h-16 transition-all rounded-full hover:scale-110 hover:bg-primary hover:text-primary-foreground"
             onClick={() => setIsModalOpen(true)}
           />
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-full">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
           </div>
         ) : (
