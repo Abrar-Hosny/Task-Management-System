@@ -6,11 +6,15 @@ import {
 } from "@aws-sdk/client-transcribe-streaming";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "../components/ui/button";
+import {
+  RecordingProperties,
+  MessageDataType,
+  LiveTranscriptionProps,
+} from "../types";
 
-// Configuration
-const sampleRate = import.meta.env.VITE_TRANSCRIBE_SAMPLING_RATE || 44100;
-const language = (import.meta.env.VITE_TRANSCRIBE_LANGUAGE_CODE ||
-  "en-US") as LanguageCode;
+const sampleRate = import.meta.env.VITE_TRANSCRIBE_SAMPLING_RATE;
+const language = import.meta.env.VITE_TRANSCRIBE_LANGUAGE_CODE as LanguageCode;
+const audiosource = import.meta.env.VITE_TRANSCRIBE_AUDIO_SOURCE;
 
 // Helper function to PCM encode audio
 const pcmEncode = (input: Float32Array) => {
@@ -79,7 +83,10 @@ export function SpeechToTextInput({
   );
 
   // Clean up function to stop recording
-  const stopRecording = async () => {
+  const stopStreaming = async (
+    mediaRecorder: AudioWorkletNode,
+    transcribeClient: { destroy: () => void }
+  ) => {
     if (mediaRecorder) {
       mediaRecorder.port.postMessage({
         message: "UPDATE_RECORDING_STATE",
@@ -87,149 +94,154 @@ export function SpeechToTextInput({
       });
       mediaRecorder.port.close();
       mediaRecorder.disconnect();
+    } else {
+      console.log("no media recorder available to stop");
     }
 
     if (transcribeClient) {
       transcribeClient.destroy();
     }
-
-    setIsRecording(false);
-    setMediaRecorder(null);
-    setTranscribeClient(null);
   };
 
   // Start streaming transcription
-  const startStreaming = async () => {
+  const startStreaming = async (
+    handleTranscribeOutput: (
+      data: string,
+      partial: boolean,
+      transcriptionClient: TranscribeStreamingClient,
+      mediaRecorder: AudioWorkletNode
+    ) => void
+  ) => {
+    const audioContext = new window.AudioContext();
+    let stream: MediaStream;
+
+    stream = await window.navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: true,
+    });
+
+    const source1 = audioContext.createMediaStreamSource(stream);
+
+    const recordingprops: RecordingProperties = {
+      numberOfChannels: 1,
+      sampleRate: audioContext.sampleRate,
+      maxFrameCount: (audioContext.sampleRate * 1) / 10,
+    };
+
     try {
-      const audioContext = new window.AudioContext();
-      let stream: MediaStream;
-
-      // Get audio input (microphone)
-      stream = await window.navigator.mediaDevices.getUserMedia({
-        video: false,
-        audio: true,
-      });
-
-      const source1 = audioContext.createMediaStreamSource(stream);
-
-      const recordingProps = {
-        numberOfChannels: 1,
-        sampleRate: audioContext.sampleRate,
-        maxFrameCount: (audioContext.sampleRate * 1) / 10,
-      };
-
-      // Add audio worklet module
       await audioContext.audioWorklet.addModule(
         "../../public/worklets/recording-processor.js"
       );
+    } catch (error) {
+      console.log(`Add module error ${error}`);
+    }
+    const mediaRecorder = new AudioWorkletNode(
+      audioContext,
+      "recording-processor",
+      {
+        processorOptions: recordingprops,
+      }
+    );
 
-      const newMediaRecorder = new AudioWorkletNode(
-        audioContext,
-        "recording-processor",
-        {
-          processorOptions: recordingProps,
+    const destination = audioContext.createMediaStreamDestination();
+
+    mediaRecorder.port.postMessage({
+      message: "UPDATE_RECORDING_STATE",
+      setRecording: true,
+    });
+
+    source1.connect(mediaRecorder).connect(destination);
+    mediaRecorder.port.onmessageerror = (error) => {
+      console.log(`Error receving message from worklet ${error}`);
+    };
+
+    const audioDataIterator = createMessageIterator(mediaRecorder.port);
+
+    const getAudioStream = async function* () {
+      for await (const chunk of audioDataIterator) {
+        if (chunk.data.message === "SHARE_RECORDING_BUFFER") {
+          const abuffer = pcmEncode(chunk.data.buffer[0]);
+          const audiodata = new Uint8Array(abuffer);
+          // console.log(`processing chunk of size ${audiodata.length}`);
+          yield {
+            AudioEvent: {
+              AudioChunk: audiodata,
+            },
+          };
         }
-      );
+      }
+    };
+    const transcribeClient = new TranscribeStreamingClient({
+      region: "us-east-1",
+      credentials: {
+        accessKeyId: import.meta.env.VITE_TRANSCRIBE_ACCESS_KEY_ID,
+        secretAccessKey: import.meta.env.VITE_TRANSCRIBE_SECRET_ACCESS_KEY,
+      },
+    });
 
-      const destination = audioContext.createMediaStreamDestination();
+    const command = new StartStreamTranscriptionCommand({
+      LanguageCode: language,
+      MediaEncoding: "pcm",
+      MediaSampleRateHertz: sampleRate,
+      AudioStream: getAudioStream(),
+    });
+    const data = await transcribeClient.send(command);
+    console.log("Transcribe sesssion established ", data.SessionId);
 
-      newMediaRecorder.port.postMessage({
-        message: "UPDATE_RECORDING_STATE",
-        setRecording: true,
-      });
-
-      source1.connect(newMediaRecorder).connect(destination);
-
-      // Setup audio data iterator
-      const audioDataIterator = createMessageIterator(newMediaRecorder.port);
-
-      const getAudioStream = async function* () {
-        for await (const chunk of audioDataIterator) {
-          if (chunk.data.message === "SHARE_RECORDING_BUFFER") {
-            const abuffer = pcmEncode(chunk.data.buffer[0]);
-            const audiodata = new Uint8Array(abuffer);
-            yield {
-              AudioEvent: {
-                AudioChunk: audiodata,
-              },
-            };
-          }
-        }
-      };
-
-      // Create Transcribe client
-      const client = new TranscribeStreamingClient({
-        region: "us-east-1",
-        credentials: {
-          accessKeyId: import.meta.env.VITE_TRANSCRIBE_ACCESS_KEY_ID,
-          secretAccessKey: import.meta.env.VITE_TRANSCRIBE_SECRET_ACCESS_KEY,
-        },
-      });
-      console.log(
-        import.meta.env.VITE_TRANSCRIBE_ACCESS_KEY_ID,
-        import.meta.env.VITE_TRANSCRIBE_SECRET_ACCESS_KEY
-      );
-      setTranscribeClient(client);
-      setMediaRecorder(newMediaRecorder);
-
-      // Start transcription
-      const command = new StartStreamTranscriptionCommand({
-        LanguageCode: language,
-        MediaEncoding: "pcm",
-        MediaSampleRateHertz: sampleRate,
-        AudioStream: getAudioStream(),
-      });
-
-      const data = await client.send(command);
-
-      if (data.TranscriptResultStream) {
-        for await (const event of data.TranscriptResultStream) {
-          if (event?.TranscriptEvent?.Transcript) {
-            for (const result of event?.TranscriptEvent?.Transcript.Results ||
-              []) {
-              if (result?.Alternatives && result?.Alternatives[0].Items) {
-                let completeSentence = ``;
-                for (
-                  let i = 0;
-                  i < result?.Alternatives[0].Items?.length;
-                  i++
-                ) {
-                  completeSentence += ` ${result?.Alternatives[0].Items[i].Content}`;
-                }
-                // Debug: Log all transcription results
-                console.log("Transcription Result:", {
-                  completeSentence: completeSentence.trim(),
-                  isPartial: result.IsPartial,
-                });
-                // Only update if it's a final transcription
-                if (!result.IsPartial) {
-                  onValueChange(value + " " + completeSentence.trim());
-                }
+    if (data.TranscriptResultStream) {
+      for await (const event of data.TranscriptResultStream) {
+        if (event?.TranscriptEvent?.Transcript) {
+          for (const result of event?.TranscriptEvent?.Transcript.Results ||
+            []) {
+            if (result?.Alternatives && result?.Alternatives[0].Items) {
+              let completeSentence = ``;
+              for (let i = 0; i < result?.Alternatives[0].Items?.length; i++) {
+                completeSentence += ` ${result?.Alternatives[0].Items[i].Content}`;
               }
+              // console.log(`Transcription: ${completeSentence}`);
+              handleTranscribeOutput(
+                completeSentence,
+                result.IsPartial || false,
+                transcribeClient,
+                mediaRecorder
+              );
             }
           }
         }
       }
-    } catch (error) {
-      console.error("Transcription error:", error);
-      await stopRecording();
     }
   };
 
   // Toggle recording
+  const handleTranscribeOutput = (
+    data: string,
+    partial: boolean,
+    transcriptionClient: TranscribeStreamingClient,
+    mediaRecorder: AudioWorkletNode
+  ) => {
+    onValueChange(data);
+  };
+
   const toggleRecording = async () => {
+    console.log("toggle recording");
     if (isRecording) {
-      await stopRecording();
+        if (mediaRecorder && transcribeClient) {
+          await stopStreaming(mediaRecorder, transcribeClient);
+        }
+      console.log("stopped recording");
     } else {
       setIsRecording(true);
-      await startStreaming();
+      await startStreaming(handleTranscribeOutput);
+      console.log("started recording");
     }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopRecording();
+      if (mediaRecorder && transcribeClient) {
+        stopStreaming(mediaRecorder, transcribeClient);
+      }
     };
   }, []);
 
