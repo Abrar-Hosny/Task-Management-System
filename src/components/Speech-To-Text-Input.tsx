@@ -198,7 +198,7 @@ export function SpeechToTextInput({
               for (let i = 0; i < result?.Alternatives[0].Items?.length; i++) {
                 completeSentence += ` ${result?.Alternatives[0].Items[i].Content}`;
               }
-              // console.log(`Transcription: ${completeSentence}`);
+              console.log(`Transcription: ${completeSentence}`);
               handleTranscribeOutput(
                 completeSentence,
                 result.IsPartial || false,

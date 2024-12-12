@@ -55,11 +55,11 @@ export function TaskFormModal({ isOpen, onClose, onAddTask }) {
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full"
                 />
-                <SpeechToTextInput
+                {/* <SpeechToTextInput
                   inputType="title"
                   value={title}
                   onValueChange={setTitle}
-                />
+                /> */}
               </div>
               <div className="flex items-center space-x-2">
                 <Textarea
